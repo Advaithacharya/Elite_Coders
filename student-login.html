@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Quiz Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .back-btn {
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Student Login</h2>
+        <form id="studentLoginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Login</button>
+            <p id="errorMessage" class="error-message">Invalid credentials. Please try again.</p>
+        </form>
+        <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+    </div>
+
+    <script>
+        document.getElementById('studentLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            try {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.txt';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+
+                fileInput.onchange = async function(e) {
+                    const file = e.target.files[0];
+                    if (!file) {
+                        document.body.removeChild(fileInput);
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const content = e.target.result;
+                            const lines = content.split('\n').filter(line => line.trim());
+                            
+                            const isValid = lines.some(line => {
+                                const values = line.split(',');
+                                if (values.length < 2) return false;
+                                
+                                // Get last two values as username and password
+                                const storedUsername = values[values.length - 2];
+                                const storedPassword = values[values.length - 1].trim();
+                                
+                                return storedUsername === username && storedPassword === password;
+                            });
+
+                            if (isValid) {
+                                // Store login status in session storage
+                                sessionStorage.setItem('studentLoggedIn', 'true');
+                                sessionStorage.setItem('studentUsername', username);
+                                
+                                // Redirect to student dashboard
+                                window.location.href = 'student-dashboard.html';
+                            } else {
+                                errorMessage.style.display = 'block';
+                                e.target.form.reset();
+                            }
+                        } catch (error) {
+                            console.error('Error parsing file:', error);
+                            errorMessage.style.display = 'block';
+                        }
+                        document.body.removeChild(fileInput);
+                    };
+                    reader.readAsText(file);
+                };
+
+                fileInput.click();
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html> 

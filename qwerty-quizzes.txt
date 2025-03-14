@@ -1,0 +1,19 @@
+[
+  {
+    "title": "maths",
+    "duration": 10,
+    "questions": [
+      {
+        "text": "how are you",
+        "options": [
+          "ok",
+          "ok1",
+          "ok2",
+          "ok",
+          "0k4"
+        ],
+        "answer": "ok1"
+      }
+    ]
+  }
+]

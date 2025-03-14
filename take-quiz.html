@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Quiz - Quiz Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logout-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #ff6b6b;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+            transform: scale(1.02);
+        }
+
+        .quiz-info {
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .question-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .question {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .options {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+
+        .nav-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .result-container {
+            color: white;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 2rem;
+            margin: 1rem 0;
+        }
+
+        .feedback {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .answer-review {
+            text-align: left;
+            margin-top: 2rem;
+        }
+
+        .review-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .correct {
+            color: #4CAF50;
+        }
+
+        .incorrect {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="header">
+            <h2 id="quizTitle">Quiz Title</h2>
+            <div class="header-content">
+                <div class="timer" id="timer">Time Remaining: <span id="time">00:00</span></div>
+                <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+            </div>
+        </div>
+        <div id="quizContent"></div>
+    </div>
+
+    <script>
+        let quiz = null;
+        let timer = null;
+
+        function loadQuiz() {
+            quiz = JSON.parse(sessionStorage.getItem('currentQuiz'));
+            if (!quiz) {
+                window.location.href = 'student-dashboard.html';
+                return;
+            }
+            document.getElementById('quizTitle').textContent = quiz.title;
+            startTimer(quiz.duration * 60); // Convert minutes to seconds
+            showQuestion();
+        }
+
+        function startTimer(duration) {
+            let timeLeft = duration;
+            timer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('time').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (--timeLeft < 0) {
+                    clearInterval(timer);
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        function showQuestion() {
+            const question = quiz.questions[quiz.currentQuestion];
+            const content = document.getElementById('quizContent');
+            
+            content.innerHTML = `
+                <div class="quiz-info">
+                    Question ${quiz.currentQuestion + 1} of ${quiz.questions.length}
+                </div>
+                <div class="question-container">
+                    <div class="question">${question.question}</div>
+                    <div class="options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" onclick="selectOption(${index})" id="option${index}">
+                                ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="navigation">
+                    ${quiz.currentQuestion > 0 ? 
+                        `<button class="nav-btn" onclick="previousQuestion()">Previous</button>` : 
+                        `<button class="nav-btn" disabled>Previous</button>`}
+                    ${quiz.currentQuestion < quiz.questions.length - 1 ? 
+                        `<button class="nav-btn" onclick="nextQuestion()">Next</button>` : 
+                        `<button class="nav-btn" onclick="submitQuiz()">Submit Quiz</button>`}
+                </div>
+            `;
+
+            // Show selected answer if exists
+            if (quiz.answers[quiz.currentQuestion] !== undefined) {
+                selectOption(quiz.answers[quiz.currentQuestion], false);
+            }
+        }
+
+        function selectOption(index, save = true) {
+            // Remove previous selection
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selection to clicked option
+            document.getElementById(`option${index}`).classList.add('selected');
+            
+            if (save) {
+                // Save answer
+                quiz.answers[quiz.currentQuestion] = index;
+                sessionStorage.setItem('currentQuiz', JSON.stringify(quiz));
+            }
+        }
+
+        function nextQuestion() {
+            if (quiz.currentQuestion < quiz.questions.length - 1) {
+                quiz.currentQuestion++;
+                showQuestion();
+            }
+        }
+
+        function previousQuestion() {
+            if (quiz.currentQuestion > 0) {
+                quiz.currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function submitQuiz() {
+            clearInterval(timer);
+            
+            // Calculate score
+            let score = 0;
+            quiz.answers.forEach((answer, index) => {
+                if (answer === quiz.questions[index].correctAnswer) {
+                    score++;
+                }
+            });
+            
+            const percentage = (score / quiz.questions.length) * 100;
+            
+            // Show results
+            const content = document.getElementById('quizContent');
+            content.innerHTML = `
+                <div class="result-container">
+                    <h2>Quiz Complete!</h2>
+                    <div class="score">Score: ${score}/${quiz.questions.length} (${percentage.toFixed(2)}%)</div>
+                    <div class="feedback">
+                        ${percentage >= 80 ? 'Excellent work!' : 
+                          percentage >= 60 ? 'Good job!' : 
+                          'Keep practicing!'}
+                    </div>
+                    <div class="answer-review">
+                        <h3>Review Answers:</h3>
+                        ${quiz.questions.map((question, index) => `
+                            <div class="review-item">
+                                <p><strong>Q${index + 1}:</strong> ${question.question}</p>
+                                <p class="${quiz.answers[index] === question.correctAnswer ? 'correct' : 'incorrect'}">
+                                    Your answer: ${question.options[quiz.answers[index]]}
+                                    ${quiz.answers[index] !== question.correctAnswer ? 
+                                        `<br>Correct answer: ${question.options[question.correctAnswer]}` : 
+                                        ''}
+                                </p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="nav-btn" onclick="window.location.href='student-dashboard.html'" style="margin-top: 2rem;">
+                        Return to Dashboard
+                    </button>
+                </div>
+            `;
+        }
+
+        // Load quiz when page loads
+        window.addEventListener('load', loadQuiz);
+    </script>
+</body>
+</html> 

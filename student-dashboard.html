@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Quiz Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h2 {
+            color: white;
+            font-size: 1.8rem;
+        }
+
+        .logout-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #ff6b6b;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+            transform: scale(1.02);
+        }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .quiz-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .quiz-card h3 {
+            margin: 0 0 1rem 0;
+            color: #4CAF50;
+        }
+
+        .quiz-info {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .quiz-info i {
+            margin-right: 0.5rem;
+            color: #4CAF50;
+        }
+
+        .start-quiz-btn {
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 1rem;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .start-quiz-btn:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+
+        .teacher-section {
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
+        }
+
+        .teacher-header {
+            color: white;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .file-input-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        .retry-btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .retry-btn:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h2>Quiz Dashboard</h2>
+            <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+        </div>
+        <div id="quizContainer">
+            <div class="loading">Loading quizzes...</div>
+        </div>
+    </div>
+
+    <script>
+        // Note: Due to security reasons, we cannot fetch quiz data directly from the database.
+        // Instead, we are using locally downloaded data stored in the following format.
+        const quizData = {
+            'san': [
+                {
+                    title: "Mathematics Quiz",
+                    duration: 30,
+                    questions: [
+                        {
+                            question: "What is the value of π (pi) to two decimal places?",
+                            options: ["3.14", "3.16", "3.12", "3.18"],
+                            correctAnswer: 0
+                        },
+                        {
+                            question: "What is the square root of 144?",
+                            options: ["10", "12", "14", "16"],
+                            correctAnswer: 1
+                        },
+                        {
+                            question: "What is 15% of 200?",
+                            options: ["20", "25", "30", "35"],
+                            correctAnswer: 2
+                        },
+                        {
+                            question: "If x + 5 = 12, what is x?",
+                            options: ["5", "6", "7", "8"],
+                            correctAnswer: 2
+                        },
+                        {
+                            question: "What is the area of a square with sides of 9 units?",
+                            options: ["72", "81", "90", "99"],
+                            correctAnswer: 1
+                        }
+                    ]
+                }
+            ],
+            'john': [
+                {
+                    title: "Science Quiz",
+                    duration: 45,
+                    questions: [
+                        {
+                            question: "What is the chemical symbol for gold?",
+                            options: ["Ag", "Au", "Fe", "Cu"],
+                            correctAnswer: 1
+                        },
+                        {
+                            question: "Which planet is known as the Red Planet?",
+                            options: ["Venus", "Jupiter", "Mars", "Saturn"],
+                            correctAnswer: 2
+                        },
+                        {
+                            question: "What is the largest organ in the human body?",
+                            options: ["Heart", "Brain", "Liver", "Skin"],
+                            correctAnswer: 3
+                        },
+                        {
+                            question: "What is the process by which plants make their food?",
+                            options: ["Photosynthesis", "Respiration", "Digestion", "Absorption"],
+                            correctAnswer: 0
+                        },
+                        {
+                            question: "What is the hardest natural substance on Earth?",
+                            options: ["Gold", "Iron", "Diamond", "Platinum"],
+                            correctAnswer: 2
+                        }
+                    ]
+                }
+            ]
+        };
+
+        function displayQuizzes(quizzes, teacherName) {
+            const container = document.getElementById('quizContainer');
+            
+            const teacherSection = document.createElement('div');
+            teacherSection.className = 'teacher-section';
+            teacherSection.innerHTML = `
+                <div class="teacher-header">
+                    <h2>Teacher: ${teacherName}</h2>
+                </div>
+                <div class="quiz-grid">
+                    ${quizzes.map((quiz, index) => `
+                        <div class="quiz-card">
+                            <h3>${quiz.title || 'Untitled Quiz'}</h3>
+                            <p class="quiz-info">
+                                Duration: ${quiz.duration || 30} minutes
+                            </p>
+                            <p class="quiz-info">
+                                Questions: ${quiz.questions ? quiz.questions.length : 0}
+                            </p>
+                            <button class="start-quiz-btn" onclick="startQuiz('${teacherName}', ${index})">
+                                Launch Quiz
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            return teacherSection;
+        }
+
+        function startQuiz(teacherName, quizIndex) {
+            try {
+                const quiz = quizData[teacherName][quizIndex];
+                sessionStorage.setItem('currentQuiz', JSON.stringify({
+                    ...quiz,
+                    teacherName: teacherName,
+                    currentQuestion: 0,
+                    score: 0,
+                    answers: []
+                }));
+                window.location.href = 'take-quiz.html';
+            } catch (error) {
+                console.error('Error starting quiz:', error);
+                showError('Error starting quiz. Please try again.');
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = `
+                <div class="error-message">
+                    ${message}
+                    <br>
+                    <button class="retry-btn" onclick="loadAllQuizzes()">Try Again</button>
+                </div>
+            `;
+        }
+
+        function loadAllQuizzes() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+
+            try {
+                // Load quizzes from local data
+                Object.entries(quizData).forEach(([teacherName, quizzes]) => {
+                    const section = displayQuizzes(quizzes, teacherName);
+                    container.appendChild(section);
+                });
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+                showError('Error loading quizzes. Please check the data format.');
+            }
+        }
+
+        // Load quizzes when the page loads
+        window.addEventListener('load', loadAllQuizzes);
+    </script>
+</body>
+</html> 

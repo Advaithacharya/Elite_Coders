@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Result - Quiz Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .result-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem auto;
+            color: white;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 2rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            background: rgba(76, 175, 80, 0.2);
+            border: 4px solid #4CAF50;
+        }
+
+        .result-details {
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .back-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .grade {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .pass {
+            color: #4CAF50;
+        }
+
+        .fail {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-container">
+        <h2>Quiz Results</h2>
+        <div class="score-circle" id="scoreCircle">
+            <span id="percentage">--%</span>
+        </div>
+        <div class="grade" id="grade"></div>
+        <div class="result-details">
+            <div class="result-item">
+                <span>Quiz Title:</span>
+                <span id="quizTitle"></span>
+            </div>
+            <div class="result-item">
+                <span>Teacher:</span>
+                <span id="teacherName"></span>
+            </div>
+            <div class="result-item">
+                <span>Score:</span>
+                <span id="score"></span>
+            </div>
+            <div class="result-item">
+                <span>Time Spent:</span>
+                <span id="timeSpent"></span>
+            </div>
+        </div>
+        <button class="back-btn" onclick="window.location.href='student-dashboard.html'">Back to Dashboard</button>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            const resultData = sessionStorage.getItem('quizResult');
+            if (!resultData) {
+                window.location.href = 'student-dashboard.html';
+                return;
+            }
+
+            const result = JSON.parse(resultData);
+            
+            // Display results
+            document.getElementById('percentage').textContent = `${Math.round(result.percentage)}%`;
+            document.getElementById('quizTitle').textContent = result.quizTitle;
+            document.getElementById('teacherName').textContent = result.teacherName;
+            document.getElementById('score').textContent = `${result.score}/${result.total}`;
+            
+            // Calculate time spent
+            const minutes = Math.floor(result.timeSpent / 60);
+            const seconds = result.timeSpent % 60;
+            document.getElementById('timeSpent').textContent = 
+                `${minutes}m ${seconds}s`;
+
+            // Set grade
+            const gradeElement = document.getElementById('grade');
+            if (result.percentage >= 60) {
+                gradeElement.textContent = 'PASS';
+                gradeElement.className = 'grade pass';
+            } else {
+                gradeElement.textContent = 'FAIL';
+                gradeElement.className = 'grade fail';
+            }
+
+            // Set score circle color based on percentage
+            const scoreCircle = document.getElementById('scoreCircle');
+            if (result.percentage >= 80) {
+                scoreCircle.style.borderColor = '#4CAF50';
+                scoreCircle.style.background = 'rgba(76, 175, 80, 0.2)';
+            } else if (result.percentage >= 60) {
+                scoreCircle.style.borderColor = '#FFC107';
+                scoreCircle.style.background = 'rgba(255, 193, 7, 0.2)';
+            } else {
+                scoreCircle.style.borderColor = '#f44336';
+                scoreCircle.style.background = 'rgba(244, 67, 54, 0.2)';
+            }
+
+            // Clear result from session storage
+            sessionStorage.removeItem('quizResult');
+        });
+    </script>
+</body>
+</html> 
